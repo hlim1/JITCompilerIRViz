@@ -42,16 +42,6 @@ import PoCModifier.JSAstGenerator as AstG
 
 JSCODEGENERATOR = "/scratch/hlim1/scripts/ResearchTools/PoCModifier/JSCodeGenerator.js"
 
-#D8="/scratch/hlim1/V8s/v8_6.0.0/v8/out/x64.release/d8"    # issue 716044
-#D8="/scratch/hlim1/V8s/v8_6.2.0/v8/out/x64.release/d8"    # issue
-#D8="/scratch/hlim1/V8s/v8_6.5.0/v8/out/x64.release/d8"    # issue 791245, 794822
-#D8="/scratch/hlim1/V8s/v8_7.0.0/v8/out/x64.release/d8"    # issue 8056
-#D8="/scratch/hlim1/V8s/v8_7.1.0/v8/out/x64.release/d8"    # issue 880207
-#D8="/scratch/hlim1/V8s/v8_7.6.0/v8/out/x64.release/d8"    # issue 961237
-D8="/scratch/hlim1/V8s/v8_8.3.1/v8/out/x64.release/d8"    # issue 5129
-#D8="/scratch/hlim1/V8s/v8_8.4.0/v8/out/x64.release/d8"    # issue 1072171
-#D8="/scratch/hlim1/V8s/v8_8.5.51/v8/out/x64.release/d8"    # issue 2046
-
 D8OPTIONS = [
         "--allow-natives-syntax",
         "--no-turbo-inlining",
@@ -107,7 +97,7 @@ def CheckUserInputs(PoC: str, bytecode: str, directory: str, number: int):
     if not os.path.exists(f"{directory}/etc"):
         os.makedirs(f"{directory}/etc")
 
-def RunD8(directory: str):
+def RunD8(directory: str, executable: str):
     """This function runs all the PoC files including the original file.
     It captures the stdouts from running the PoCs with d8 and write to files.
 
@@ -120,6 +110,8 @@ def RunD8(directory: str):
     """
     
     begin = time.time()
+
+    D8 = executable
 
     pocsDir  = directory + "/pocs"
     d8outDir = directory + "/d8outs"
@@ -465,6 +457,12 @@ def argument_parser():
         help="Original PoC JS file."
     )
     parser.add_argument(
+        "-e",
+        "--executable",
+        type=str,
+        help="D8 executable."
+    )
+    parser.add_argument(
         "-b",
         "--bytecode",
         type=str,
@@ -491,15 +489,15 @@ def argument_parser():
     
     args = parser.parse_args()
 
-    return args.file, args.bytecode, args.directory, args.number, args.csv
+    return args.file, args.bytecode, args.directory, args.number, args.csv, args.executable
 
 if __name__ == "__main__":
-    PoC, bytecode, directory, number, csv_f = argument_parser()
+    PoC, bytecode, directory, number, csv_f, executable = argument_parser()
     CheckUserInputs(PoC, bytecode, directory, number)
     # Get N number of modified PoCs from the original PoC.
     GetPoCs(PoC, directory, number)
     # Run d8 to get the outputs of each PoCs.
-    Crashes = RunD8(directory)
+    Crashes = RunD8(directory, excutable)
     # Get ascii files for each PoC runs.
     GetTraceAsciis(directory)
     # Run graph creator to get graphs for each trace.
