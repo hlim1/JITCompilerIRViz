@@ -25,6 +25,10 @@ import FunctionLists as FL
 import NativeCodeMapper as NT
 import GraphCreator as GC
 import GraphAnalyser as GA
+import Visualization.GraphRestructurer as GR
+import Visualization.GraphMerger as GM
+
+from Visualization.Simplifier import Simplifier
 
 # Code to import modules from other directories.
 # Soruce: https://codeolives.com/2020/01/10/python-reference-module-in-parent-directory/
@@ -406,228 +410,6 @@ def GetGraphs(directory: str, bytecode: str):
 
     return graphs, jitted
 
-def AnalyseGraph(Graphs: dict, CorrectExecs: dict, directory: str):
-    """This function calls graph analyser functions to analyse the
-    graphs to get the table of phase differences.
-
-    args:
-        Graphs (dict): dictionary of generated graphs and their
-        properties, where key is the file number.
-        CorrectExecs (dict): each element represent whether the PoC was
-        correctly executed or not.
-        directory (str): directory to store generated outout files.
-
-    returns:
-        (dict) candidate phase-to-missing nodes.
-        (dict) correct graph info. dict.
-        (dict) incorrect graph info. dict.
-        (list) graph numbers that min candidates were found
-    """
-
-    begin = time.time()
-
-    graphDir  = directory + "/graphs"
-
-    # Group graphs into two categories: Correct and Incorrect.
-    GroupedGraphs = GA.GroupGraphs(Graphs, CorrectExecs)
-
-    # Restructure graphs.
-    RestructuredGraphs, original = RestructureGraphs(GroupedGraphs)
-
-    # Filter graphs.
-    RestructuredGraphs['incorrect'] = GA.FilterGraphs(
-                                        RestructuredGraphs['incorrect'],
-                                        original
-                                    )
-    RestructuredGraphs['correct'] = GA.FilterGraphs(
-                                      RestructuredGraphs['correct'],
-                                      original
-                                    )
-
-    # Compute the intersections for each group of graphs
-    (
-        intersections_str_B
-    ) = RunGraphAnalyser(RestructuredGraphs['incorrect'])
-    ## DEBUG ========================================================
-    print ("Intersection from incorrect list: ", intersections_str_B)
-    for phase_id in intersections_str_B:
-        print (phase_id, original.id_to_phase[phase_id])
-    #sys.exit()
-    ## ==============================================================
-    (
-        intersections_str_A
-    ) = RunGraphAnalyser(RestructuredGraphs['correct'])
-    ## DEBUG ========================================================
-    print ("Intersection from correct list: ", intersections_str_A)
-    for phase_id in intersections_str_A:
-        print (phase_id, original.id_to_phase[phase_id])
-    #sys.exit()
-    ## ==============================================================
-
-    # Compute the symmetric difference between the two intersections.
-    symmetric_diffs, intersections = GA.get_diff_phases(intersections_str_A, intersections_str_B)
-    ## DEBUG ====================================================
-    print ("Intersection result of two intersections: ", intersections)
-    print ("Symmetric difference of two intersections: ", symmetric_diffs)
-    ## ===========================================================
-
-    IncorrectToCorrectComp(RestructuredGraphs['incorrect'], RestructuredGraphs['correct'], intersections)
-
-    end = time.time()
-    print ("TIME: AnalyseGraph -", "{0:.2f}".format((end-begin)/60), " mins")
-
-    return list(symmetric_diffs), original
-
-def RunGraphAnalyser(Graphs: list):
-    """This function runs GraphAnalyser and gets intersection results.
-
-    args:
-        Graphs (list): list of graphs. Each element is also a list of
-        size two, where [0] is the graph number and [1] is the actual
-        graph.
-
-    returns:
-
-    """
-
-    Result = []
-    for i in Graphs:
-        for j in Graphs:
-            if (
-                    j[0] != i[0]
-            ):
-                (
-                    CommonPhaseIDs
-                ) = GA.GraphAnalyser(i[1], j[1])
-                Result.append(set(CommonPhaseIDs))
-                ## DEBUG ============================
-                # print ("Graph Number: ", i[0], j[0])
-                # print ("CommonPhaseIDs: ", CommonPhaseIDs)
-                ## ==================================
-
-    if len(Graphs) == 1:
-        Result = GA.get_only_opt_phases(Graphs[0][1].nodes)
-
-    Intersections_str = GA.get_intersections(Result)
-
-    return Intersections_str
-
-def IncorrectToCorrectComp(Incorrects: list, Corrects: list, TargetPhaseIDs: list):
-    """
-    """
-
-    for i_graph in Incorrects:
-        for c_graph in Corrects:
-            DiffNodesById = GA.CompareGraphByPhaseId(i_graph[1], c_graph[1], TargetPhaseIDs)
-            ## DEBUG ============================
-            print ("Graphs: ", i_graph[0], c_graph[0])
-            print ("Different Phase IDs: ", list(DiffNodesById.keys()))
-            ## ==================================
-            for id, nodes in DiffNodesById.items():
-                _nodes = []
-                for node in nodes:
-                    _nodes.append(node.opcode[0])
-
-def RestructureGraphs(Graphs: dict):
-    """
-    """
-
-    original = None
-    RestructuredGraphs = {'correct':[], 'incorrect':[]}
-
-    for key, graphs in Graphs.items():
-        for graph in graphs:
-            restructured_graph = GA.RestructureGraph(graph[1])
-            RestructuredGraphs[key].append([graph[0], restructured_graph])
-            if graph[0] == '0':
-                original = restructured_graph
-
-    return RestructuredGraphs, original
-
-def IdentifyCorrectExecutions(Jitted: dict, directory: str):
-    """This function identifies the files those were correctly executed and
-    those did not among from the ones that were jit compiled.
-
-    args:
-        Jitted (dict): holds each file number to True or False depends on the
-        Jit compiled status.
-        directory (str): Directory to store generated outout files.
-
-    returns:
-        (dict) file number to boolean, where True if PoC executed correctly.
-        Otherwise, False.
-    """
-
-    CorrectExecs = {}
-
-    d8OutsDir = directory + "/d8outs"
-    d8Outs = os.listdir(d8OutsDir)
-
-    # Retrieve the original PoC's execution output for compare.
-    original_out = None
-    original_file = d8OutsDir + "/output_0.out"
-    with open(original_file) as f:
-        original_out = f.readlines()
-
-    assert (
-            original_out
-    ), f"ERROR: original_out is None."
-
-    for out in d8Outs:
-        outPath = d8OutsDir + "/" + out
-        filenumber = get_file_number(out)
-        # If the PoC execution was JIT compiled, then identify
-        # whether it was a correct execution or not.
-        if filenumber in Jitted and Jitted[filenumber]:
-            with open(outPath) as f:
-                output = f.readlines()
-                # Case 1. If the readin output is same as the original PoC's output,
-                # then the PoC that produced current output is also incorrect.
-                if output == original_out:
-                    CorrectExecs[filenumber] = False
-                else:
-                    if len(output) > 0 and output[0] == "CRASHED":
-                        # Case 2. If there was a crash during the execution, we consider
-                        # it as incorrect execution
-                        CorrectExecs[filenumber] = False
-                    elif len(output) > 3 and output[0:2] != output[-3:-1]:
-                        # Case 3. If the first 2 and last 2 output lines are different, 
-                        # the PoC is considered as it had an incorrect execution.
-                        CorrectExecs[filenumber] = False
-                    elif len(output) > 1 and output[0] != output[-1]:
-                        CorrectExecs[filenumber] = False
-                    else:
-                        # Case 4. Any other cases where all outputs are equal that is interpreted
-                        # code output and jit compiled code are matching are considered correct.
-                        # Also, an empty output is considered as correct output.
-                        CorrectExecs[filenumber] = True
-
-    return CorrectExecs
-
-def GetRankedCandidates(FinalResult: list, Phases: dict):
-    """This function ertrieves the ranked candidates and returns the list to the caller.
-
-    args:
-        FinalResult (list): list of phases got from final computation.
-
-    returns:
-        (list) rank completed phase list.
-    """
-
-    begin = time.time()
-
-    ranking = []
-    # Sort final result in ascending order.
-    FinalResult.sort()
-
-    for phase_id in FinalResult:
-        ranking.append(Phases[phase_id])
-
-    end = time.time()
-    print ("TIME: GetRankedCandidates -", "{0:.2f}".format((end-begin)/60), " mins")
-
-    return ranking
-
 def read_file(filename: str) -> list:
     """This function simply opens the file, if exists,
     then returns the read in lines in list. If the file,
@@ -655,6 +437,16 @@ def read_file(filename: str) -> list:
             assert False, "Error(" + str(errno.EACCESS) + "). " + filename + ' - cannot be read'
         else:
             assert False, "Error(" + str(x.errno) + "). " + filename + ' - some other error'
+
+def write_csv(NodeSets: list, output_f: str):
+    """
+    """
+    
+    with open(output_f, 'w', newline='') as file:
+        writer = csv.writer(file)
+        for row in NodeSets:
+            writer.writerow(row)
+
 
 def argument_parser():
     """This function is for a safe command line
@@ -690,13 +482,19 @@ def argument_parser():
         type=int,
         help="A number of PoCs to modify & generate from the original."
     )
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        help="Output CSV file name."
+    )
     
     args = parser.parse_args()
 
-    return args.file, args.bytecode, args.directory, args.number
+    return args.file, args.bytecode, args.directory, args.number, args.csv
 
 if __name__ == "__main__":
-    PoC, bytecode, directory, number = argument_parser()
+    PoC, bytecode, directory, number, csv_f = argument_parser()
     CheckUserInputs(PoC, bytecode, directory, number)
     # Get N number of modified PoCs from the original PoC.
     GetPoCs(PoC, directory, number)
@@ -706,37 +504,11 @@ if __name__ == "__main__":
     GetTraceAsciis(directory)
     # Run graph creator to get graphs for each trace.
     Graphs, Jitted = GetGraphs(directory, bytecode)
-
-    # REMOVE WHEN THE PIPELINE IS COMPLETE==================
-    Jitted = {}
-    with open(f"{directory}/etc/Jitted.json") as jf:
-        Jitted = json.load(jf)
-    Graphs = {}
-    with open(f"{directory}/graphs/Graphs.pkl", "rb") as gf:
-        Graphs = pickle.load(gf)
-    sys.exit()
-    #========================================================
-
-    # Identify which PoC was executed correctly or not.
-    CorrectExecs = IdentifyCorrectExecutions(Jitted, directory)
-
-    # REMOVE WHEN THE PIPELINE IS COMPLETE==================
-    #for file, correctness in CorrectExecs.items():
-    #    print (file, correctness)
-    #print ("Correct execution (True: Correct, False: Incorrect):")
-    #for filenumber, execution in CorrectExecs.items():
-    #    print (f"{filenumber}: {execution}")
-    #sys.exit()
-    #========================================================
-
-    # Analyze generated graphs and get intersections from both
-    # groups of graphs.
-    FinalResult, Original = AnalyseGraph(Graphs, CorrectExecs, directory)
-    # Get the ranked candidate phases.
-    RankedPhases = GetRankedCandidates(FinalResult, Original.id_to_phase)
-
-    # Print the ranked phases.
-    i = 1
-    for phase in RankedPhases:
-       print (f"{i}. {phase}")
-       i += 1
+    # Restructure a graph to an appropriate format.
+    restructured_graphs = GR.RestructureGraphs(Graphs)
+    # IR merging.
+    MergedGraph, IdToNames = GM.GraphMerger(restructured_graphs)
+    # IR simplification.
+    Data = Simplifier(MergedGraph, IdToNames)
+    # Output final data to CSV file.
+    write_csv(Data, csv_f)
