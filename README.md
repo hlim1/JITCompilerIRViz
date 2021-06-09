@@ -7,28 +7,29 @@
   - You might need a permission to access the tracer tool.
 * Python Version 3.7
 
-### Chromium Bug Report
+### Chromium Bug Report Site
 * [bug.chromium.org](https://bugs.chromium.org/p/v8/issues/list?q=component%3DCompiler%20type%3DBug)
 
 ### Steps
 1. git clone https://github.com/hlim1/JITCompilerIRViz.git
 2. Checkout to the target Git commit of V8 version that holds a bug.
-    - e.g. git checkout 1006f3cd23d1cd7134452c987d10a124aab1d350
+    - e.g. _git checkout 1006f3cd23d1cd7134452c987d10a124aab1d350_
 3. Modify the _GenerateBytecodeHandler_ function in _v8/src/interpreter/interpreter-generator.cc_ to print the list of bytecodes.
-    - e.g. printf("%hhx;", bytecode); std::cout << bytecode << std::endl;
+    - e.g. _printf("%hhx;", bytecode); std::cout << bytecode << std::endl;_
 5. Build V8 executable (D8) using GN by following the instruction on V8 documentation.
     - list of bytecode (Hex:Ascii) will be printed during the build.
 6. Convert printed bytecode list to hex to json file under the format _{"hex":"Ascii"}_.
     - We provide _bytecode_json_generator.py_ to generate the json file if the user used our example in the step 3.
-    - python3 bytecode_json_generator.py -f _bytecode_list_
+    - _python3 bytecode_json_generator.py -f _bytecode_list__
 7. Collect Proof-of-Concept (PoC) code from the bug report.
 8. Move to src file.
     - cd JITCompilerIRViz/src
 10. Run Main.py with the options.
-    - python3 Main.py 
+    - _python3 Main.py 
               -f _PoC.js_
               -e _d8_executable_
               -b _bytecode_json_file_
               -d _directory_to_store_generated_temporary_files_
               -n _number_of PoCs_to_generate_
-              -o _output_csv_file_name_
+              -o _output_csv_file_name__
+11. 
