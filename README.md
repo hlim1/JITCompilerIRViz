@@ -27,8 +27,8 @@
 10. Run Main.py with the options.
     - python3 Main.py 
               -f _PoC.js_
-              -e _d8 executable_
-              -b _bytecode json file_
-              -d _directory to store generated temporary files_
-              -n _number of PoCs to generate_
-              -o _output csv file name_
+              -e _d8_executable_
+              -b _bytecode_json_file_
+              -d _directory_to_store_generated_temporary_files_
+              -n _number_of PoCs_to_generate_
+              -o _output_csv_file_name_
