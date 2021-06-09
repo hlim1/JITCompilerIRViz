@@ -13,19 +13,19 @@
 ### Steps
 1. git clone https://github.com/hlim1/JITCompilerIRViz.git
 2. Checkout to the target Git commit of V8 version that holds a bug.
-  - e.g. git checkout 1006f3cd23d1cd7134452c987d10a124aab1d350
+    - e.g. git checkout 1006f3cd23d1cd7134452c987d10a124aab1d350
 3. Modify the _GenerateBytecodeHandler_ function in _v8/src/interpreter/interpreter-generator.cc_ to print the list of bytecodes.
-  - e.g. printf("%hhx;", bytecode); std::cout << bytecode << std::endl;
+    - e.g. printf("%hhx;", bytecode); std::cout << bytecode << std::endl;
 5. Build V8 executable (D8) using GN by following the instruction on V8 documentation.
-  - list of bytecode (Hex:Ascii) will be printed during the build.
+    - list of bytecode (Hex:Ascii) will be printed during the build.
 6. Convert printed bytecode list to hex to json file under the format _{"hex":"Ascii"}_.
-  - We provide _bytecode_json_generator.py_ to generate the json file if the user used our example in the step 3.
-  - python3 bytecode_json_generator.py -f _<bytecode_list>_
+    - We provide _bytecode_json_generator.py_ to generate the json file if the user used our example in the step 3.
+    - python3 bytecode_json_generator.py -f _<bytecode_list>_
 7. Collect Proof-of-Concept (PoC) code from the bug report.
 8. Move to src file.
-  - cd JITCompilerIRViz/src
+    - cd JITCompilerIRViz/src
 10. Run Main.py with the options.
-  - python3 Main.py 
+    - python3 Main.py 
               -f _<PoC.js>_
               -e _<d8 executable>_
               -b _<bytecode json file>_
