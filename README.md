@@ -20,15 +20,15 @@
     - list of bytecode (Hex:Ascii) will be printed during the build.
 6. Convert printed bytecode list to hex to json file under the format _{"hex":"Ascii"}_.
     - We provide _bytecode_json_generator.py_ to generate the json file if the user used our example in the step 3.
-    - python3 bytecode_json_generator.py -f _<bytecode_list>_
+    - python3 bytecode_json_generator.py -f _bytecode_list_
 7. Collect Proof-of-Concept (PoC) code from the bug report.
 8. Move to src file.
     - cd JITCompilerIRViz/src
 10. Run Main.py with the options.
     - python3 Main.py 
-              \-f _<PoC.js>_
-              \-e _<d8 executable>_
-              \-b _<bytecode json file>_
-              \-d _<directory to store generated temporary files>_
-              \-n _<number of PoCs to generate>_
-              \-o _<output csv file name>_
+              -f _PoC.js_
+              -e _d8 executable_
+              -b _bytecode json file_
+              -d _directory to store generated temporary files_
+              -n _number of PoCs to generate_
+              -o _output csv file name_
