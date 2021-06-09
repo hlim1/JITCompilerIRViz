@@ -26,9 +26,9 @@
     - cd JITCompilerIRViz/src
 10. Run Main.py with the options.
     - python3 Main.py 
-              -f _<PoC.js>_
-              -e _<d8 executable>_
-              -b _<bytecode json file>_
-              -d _<directory to store generated temporary files>_
-              -n _<number of PoCs to generate>_
-              -o _<output csv file name>_
+              \-f _<PoC.js>_
+              \-e _<d8 executable>_
+              \-b _<bytecode json file>_
+              \-d _<directory to store generated temporary files>_
+              \-n _<number of PoCs to generate>_
+              \-o _<output csv file name>_
