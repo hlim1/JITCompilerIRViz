@@ -16,15 +16,15 @@
     - e.g. _git checkout 1006f3cd23d1cd7134452c987d10a124aab1d350_
 3. Modify the _GenerateBytecodeHandler_ function in _v8/src/interpreter/interpreter-generator.cc_ to print the list of bytecodes.
     - e.g. _printf("%hhx;", bytecode); std::cout << bytecode << std::endl;_
-5. Build V8 executable (D8) using GN by following the instruction on V8 documentation.
+4. Build V8 executable (D8) using GN by following the instruction on V8 documentation.
     - list of bytecode (Hex:Ascii) will be printed during the build.
-6. Convert printed bytecode list to hex to json file under the format _{"hex":"Ascii"}_.
+5. Convert printed bytecode list to hex to json file under the format _{"hex":"Ascii"}_.
     - We provide _bytecode_json_generator.py_ to generate the json file if the user used our example in the step 3.
     - _python3 bytecode_json_generator.py -f _bytecode_list__
-7. Collect Proof-of-Concept (PoC) code from the bug report.
-8. Move to src file.
+6. Collect Proof-of-Concept (PoC) code from the bug report.
+7. Move to src file.
     - cd JITCompilerIRViz/src
-10. Run Main.py with the options.
+8. Run Main.py with the options.
     - _python3 Main.py 
               -f _PoC.js_
               -e _d8_executable_
@@ -32,4 +32,6 @@
               -d _directory_to_store_generated_temporary_files_
               -n _number_of PoCs_to_generate_
               -o _output_csv_file_name__
-11. 
+9. Navigate to [MetroSet](https://metrosets.ac.tuwien.ac.at/)
+10. Check the CSV file was generated.
+11. Follow the instruction on MetroSet to generate the map.
