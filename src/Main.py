@@ -4,9 +4,11 @@ to identifying and producing the localised bug candidates."
 Example,
     $python Main.py\
         -f <Original PoC>\
+        -e <D8 executable>\
         -b <Bytecode JSON>\
         -d <Output Directory>\
-        -n <Number of PoC Modification>
+        -n <Number of PoC Modification>\
+        -o <CSV output file>
 
 Author: Terrence J. Lim
 """
