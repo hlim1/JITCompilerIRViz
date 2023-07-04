@@ -1,4 +1,4 @@
-# Visualizing The Intermediate Representation of Just-in-Time Compilers
+# Visualizing The Intermediate Representation JIT Compilers
 
 ### Publication
 
