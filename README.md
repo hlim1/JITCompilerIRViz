@@ -1,5 +1,9 @@
 # Visualizing The Intermediate Representation of Just-in-Time Compilers
 
+### Publication
+
+Lim, H., Kobourov, S. (2021). Visualizing JIT Compiler Graphs. In: Purchase, H.C., Rutter, I. (eds) Graph Drawing and Network Visualization. GD 2021. Lecture Notes in Computer Science(), vol 12868. Springer, Cham. https://doi.org/10.1007/978-3-030-92931-2_10
+
 ### Requirements
 * [Pin Tool](https://software.intel.com/content/www/us/en/develop/articles/pin-a-dynamic-binary-instrumentation-tool.html)
 * [V8 executable - D8](https://v8.dev/docs)
